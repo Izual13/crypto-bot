@@ -2,8 +2,9 @@
   (:require [org.httpkit.client :as http]
             [clojure.tools.nrepl.server :as nrepl.server]
             [clojure.data.json :as json]
-            [clojure.core.async :as async :refer :all]
             [cider.nrepl :as cider]))
+
+(def commands "/echo test \n/rot13 qwerty")
 
 (def last-message-id (atom 1))
 (def is-updating (atom false))
@@ -30,11 +31,12 @@
             @(http/post get-updates-url
               {:body    (get-updates-request)
                :headers {"Content-Type" "application/json"}})]
-        (if error
+        (comment if error
           (println "Failed, exception: " error)
           (println "HTTP GET success: " body))
         (reset! is-updating false)
         body))))
+
 
 
 (defn post-message [chat-id text]
@@ -48,27 +50,32 @@
     body))
 
 
-(defn parse-updates[updates]
+(defn parse-updates [updates]
   (if (not (nil? updates)) (:result (json/read-str updates :key-fn keyword))))
 
 (defn change-action [fulltext chat-id update-id]
+  (println "Message: " fulltext " chatId: " chat-id " updateId:" update-id)
   (def index (.indexOf fulltext " "))
 
   (if (not (= index -1))
     (do (def command (subs fulltext 0 index))
-      (def text (subs fulltext index))
+      (def text (subs fulltext (inc index)))
       (post-message chat-id
                     (cond
-                      (= command "/echo") text)
-                    :else "unknown command")
+                      (= command "/echo") text
+                    :else (str "unknown command\n" commands)))
       (println "Message: " text " chatId: " chat-id " updateId:" update-id))))
 
 
+
+
 (defn message-handler [{update-id :update_id {{chat-id :id} :chat text :text} :message}]
-  (do (change-action (.trim text) chat-id update-id) (update-last-message-id update-id)))
+  (if (not (nil? text))
+  (do (change-action (.trim text) chat-id update-id) (update-last-message-id update-id))))
 
 (defn main-task [] (doseq [message (parse-updates (get-updates))] (message-handler message)))
 
+;;(main-task)
 
 (defn set-interval [callback ms]
   (future (while true (do (callback) (Thread/sleep ms)))))
