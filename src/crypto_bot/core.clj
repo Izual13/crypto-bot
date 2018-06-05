@@ -7,6 +7,17 @@
 
 (def commands "/echo test \n/rot13 qwerty")
 
+(def sessions (atom {}))
+
+(defn session-put [id command] (
+  if (not (contains? @sessions id))
+     (swap! sessions assoc id command)))
+
+
+(defn session-remove [id] (
+  if (contains? @sessions id)
+     (swap! sessions dissoc id)))
+
 (def last-message-id (atom 1))
 (def is-updating (atom false))
 (def token (get (System/getenv) "TOKEN" "token..."))
@@ -23,6 +34,8 @@
     "parse_mode" "Markdown"}))
 
 (defn update-last-message-id [id] (reset! last-message-id id))
+(defn recognize-command? [row] (not (clojure.string/blank? (re-matches #"^/.*" row))))
+
 
 
 (defn get-updates []
@@ -32,9 +45,9 @@
             @(http/post get-updates-url
               {:body    (get-updates-request)
                :headers {"Content-Type" "application/json"}})]
-        (comment if error
+        (if error
           (println "Failed, exception: " error)
-          (println "HTTP GET success: " body))
+          (comment println "HTTP GET success: " body))
         (reset! is-updating false)
         body))))
 
@@ -47,36 +60,41 @@
            :headers {"Content-Type" "application/json"}})]
     (if error
       (println "Failed, exception: " error)
-      (println "HTTP GET success: " status))
+      (comment println "HTTP GET success: " status))
     body))
 
 
 (defn parse-updates [updates]
   (if (not (nil? updates)) (:result (json/read-str updates :key-fn keyword))))
 
-(defn change-action [fulltext chat-id update-id]
-  (println "Message: " fulltext " chatId: " chat-id " updateId:" update-id)
-  (def index (.indexOf fulltext " "))
+(defn parse-command [row] (let [index (.indexOf row " ")] 
+  (if (= -1 index) row (subs row 0 index))))
 
-  (if (not (= index -1))
-    (do (def command (subs fulltext 0 index))
-      (def text (subs fulltext (inc index)))
-      (post-message chat-id
-                    (cond
-                      (= command "/echo") text
-                    :else (str "unknown command\n" commands)))
-      (println "Message: " text " chatId: " chat-id " updateId:" update-id))))
+(defn processing [fulltext chat-id update-id]
+  (println "Message: " fulltext " chatId: " chat-id " updateId:" update-id)
+  (if (recognize-command? fulltext) 
+    (do 
+      (session-put chat-id (parse-command fulltext)) 
+      (post-message chat-id "enter input data"))
+    (do (if (nil? (get @sessions chat-id)) 
+      (post-message chat-id "enter command")
+      (let [command (get @sessions chat-id)]
+        (cond 
+          (= command "/echo") (post-message chat-id fulltext)
+          (= command "/test") (post-message chat-id "test")
+          :else (post-message chat-id (str "command not found\n" commands)))
+        (session-remove chat-id))))))
 
 
 
 
 (defn message-handler [{update-id :update_id {{chat-id :id} :chat text :text} :message}]
   (if (not (nil? text))
-  (do (change-action (.trim text) chat-id update-id) (update-last-message-id update-id))))
+  (do (processing (.trim text) chat-id update-id) (update-last-message-id update-id))))
 
 (defn main-task [] (doseq [message (parse-updates (get-updates))] (message-handler message)))
 
-;;(main-task)
+;(main-task)
 
 (defn set-interval [callback ms]
   (future (while true (do (callback) (Thread/sleep ms)))))

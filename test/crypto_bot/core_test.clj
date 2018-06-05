@@ -2,6 +2,14 @@
   (:require [clojure.test :refer :all]
             [crypto-bot.core :refer :all]))
 
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+(deftest parse-command-test
+  (is (= "/asd" (parse-command "/asd")))
+  (is (= "/asd" (parse-command "/asd dsfhjksdf"))))
+
+
+    
+
+(deftest recognize-command-test
+  (is (recognize-command? "/asd"))
+  (is (parse-command "/asd dsfhjksdf")))
+
