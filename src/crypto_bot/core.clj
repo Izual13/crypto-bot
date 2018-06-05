@@ -6,7 +6,7 @@
             [crypto-bot.crypto :as crpt])
   (:gen-class))
 
-(def commands "/echo test \n/rot13 qwerty")
+(def commands "/echo \n/rot13 \n/md5")
 
 (def sessions (atom {}))
 
@@ -83,6 +83,7 @@
           (= command "/echo") (post-message chat-id fulltext)
           (= command "/test") (post-message chat-id "test")
           (= command "/rot13") (post-message chat-id (crpt/rot13 fulltext))
+          (= command "/md5") (post-message chat-id (crpt/md5 fulltext))
           :else (post-message chat-id (str "command not found\n" commands)))
         (session-remove chat-id))))))
 
