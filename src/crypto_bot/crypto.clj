@@ -8,7 +8,7 @@
      (and (>= c (int \N)) (<= c (int \Z))) (- c 13)
      :else %1))) txt)))
      
-(defn bytes-to-hex [bytes] (apply str (for [b bytes] (format "%02x" b))))
+(defn bytes-to-hex [bytes] (apply str (map #(format "%02x" %) bytes)))
 
 (defn md5 [txt] (let [md5-encoder (java.security.MessageDigest/getInstance "MD5")
                       txt-bytes (.getBytes txt)]
