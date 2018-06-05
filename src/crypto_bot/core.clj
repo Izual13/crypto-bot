@@ -2,7 +2,8 @@
   (:require [org.httpkit.client :as http]
             [clojure.tools.nrepl.server :as nrepl.server]
             [clojure.data.json :as json]
-            [cider.nrepl :as cider])
+            [cider.nrepl :as cider]
+            [crypto-bot.crypto :as crpt])
   (:gen-class))
 
 (def commands "/echo test \n/rot13 qwerty")
@@ -48,8 +49,7 @@
         (if error
           (println "Failed, exception: " error)
           (comment println "HTTP GET success: " body))
-        (reset! is-updating false)
-        body))))
+        (reset! is-updating false) body))))
 
 
 
@@ -82,6 +82,7 @@
         (cond 
           (= command "/echo") (post-message chat-id fulltext)
           (= command "/test") (post-message chat-id "test")
+          (= command "/rot13") (post-message chat-id (crpt/rot13 fulltext))
           :else (post-message chat-id (str "command not found\n" commands)))
         (session-remove chat-id))))))
 
@@ -94,7 +95,7 @@
 
 (defn main-task [] (doseq [message (parse-updates (get-updates))] (message-handler message)))
 
-;(main-task)
+; (main-task)
 
 (defn set-interval [callback ms]
   (future (while true (do (callback) (Thread/sleep ms)))))
