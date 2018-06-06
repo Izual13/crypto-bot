@@ -1,4 +1,5 @@
-(ns crypto-bot.crypto)
+(ns crypto-bot.crypto
+    (:require [clojure.string :as str]))
 
 (defn rot13 [txt] (apply str 
     (map #(let [c (int %)](char (cond 
@@ -16,3 +17,14 @@
     (bytes-to-hex (.digest md5-encoder)))) 
 
 
+(def cesar-alphabet (seq "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"))
+(def cesar-alphabet-count (count cesar-alphabet))
+
+
+
+(defn cesar[txt key] (let [cipher (flatten (reverse (split-at (mod (- cesar-alphabet-count key) cesar-alphabet-count) cesar-alphabet)))] 
+    (println cipher)))
+
+(cesar "abc" 530)
+
+(get (reduce into {} (keep-indexed (fn [index item]  {item index})  cesar-alphabet)) \z)

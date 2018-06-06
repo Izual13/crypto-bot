@@ -75,9 +75,9 @@
   (if (recognize-command? fulltext) 
     (do 
       (session-put chat-id (parse-command fulltext)) 
-      (post-message chat-id "enter input data"))
+      (post-message chat-id "enter the data"))
     (do (if (nil? (get @sessions chat-id)) 
-      (post-message chat-id "enter command")
+      (post-message chat-id "enter the command")
       (let [command (get @sessions chat-id)]
         (cond 
           (= command "/echo") (post-message chat-id fulltext)
