@@ -2,7 +2,6 @@
   :description "crypto-bot"
   :dependencies [
                  [org.clojure/clojure "1.10.0-RC5"]
-                 [cider/cider-nrepl "0.18.0"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.namespace "0.2.11"]
                  [http-kit "2.3.0"]]
