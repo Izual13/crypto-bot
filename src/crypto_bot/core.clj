@@ -1,8 +1,6 @@
 (ns crypto-bot.core
   (:require [org.httpkit.client :as http]
-            [clojure.tools.nrepl.server :as nrepl.server]
             [clojure.data.json :as json]
-            [cider.nrepl :as cider]
             [crypto-bot.crypto :as crpt])
   (:gen-class))
 
@@ -87,7 +85,7 @@
           :else (post-message chat-id (str "command not found\n" commands)))
         (session-remove chat-id))))))
 
-
+(+1 2 3)
 
 
 (defn message-handler [{update-id :update_id {{chat-id :id} :chat text :text} :message}]
