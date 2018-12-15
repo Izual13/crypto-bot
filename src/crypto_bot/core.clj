@@ -85,9 +85,6 @@
           :else (post-message chat-id (str "command not found\n" commands)))
         (session-remove chat-id))))))
 
-(+1 2 3)
-
-
 (defn message-handler [{update-id :update_id {{chat-id :id} :chat text :text} :message}]
   (if (not (nil? text))
   (do (processing (.trim text) chat-id update-id) (update-last-message-id update-id))))
@@ -100,4 +97,5 @@
   (future (while true (do (callback) (Thread/sleep ms)))))
 
 (defn -main [] (def job (set-interval #(main-task) 1000)))
+
 
