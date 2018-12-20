@@ -1,6 +1,6 @@
 (ns crypto-bot.core
   (:require [org.httpkit.client :as http]
-            [clojure.data.json :as json]
+            [cheshire.core :as json]
             [crypto-bot.crypto :as crpt])
   (:gen-class))
 
@@ -24,10 +24,11 @@
 (def post-message-url (str "https://api.telegram.org/bot" token "/" "sendMessage"))
 (def get-updates-url (str "https://api.telegram.org/bot" token "/" "getUpdates"))
 
-(defn parse[str] (get (first (json/read-str str :key-fn keyword)) :price_usd))
-(defn get-updates-request [] (json/write-str {"offset" (+ @last-message-id 1) "timeout" 60}))
+
+(defn parse[str] (get (first (json/parse-string str true)) :price_usd))
+(defn get-updates-request [] (json/generate-string {"offset" (+ @last-message-id 1) "timeout" 60}))
 (defn post-message-request [chat-id text]
-  (json/write-str
+  (json/generate-string
    {"chat_id"    chat-id
     "text"       text
     "parse_mode" "Markdown"}))
@@ -63,7 +64,7 @@
 
 
 (defn parse-updates [updates]
-  (if (not (nil? updates)) (:result (json/read-str updates :key-fn keyword))))
+  (if (not (nil? updates)) (:result (json/parse-string updates true))))
 
 (defn parse-command [row] (let [index (.indexOf row " ")] 
   (if (= -1 index) row (subs row 0 index))))
